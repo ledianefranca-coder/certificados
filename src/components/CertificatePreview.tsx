@@ -14,7 +14,6 @@ import {
 import { CourseTemplate, Student } from '../types';
 import { BADM_QGEX_LOGO_SVG, DIGITAL_SIGNATURE_SVG, QGEX_WATERMARK_IMG, SGEX_LOGO_SVG } from '../utils/assets';
 import { generateCertificatePdf } from '../utils/pdfGenerator';
-import { maskCpf } from '../utils/privacy';
 
 interface CertificatePreviewProps {
   students: Student[];
@@ -103,7 +102,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
           <div className="hidden md:block text-left">
             <p className="text-sm font-bold text-white truncate max-w-xs">{student.name}</p>
-            <p className="text-xs text-slate-400">CPF: {maskCpf(student.cpf)} • Cód: {student.certificateCode}</p>
+            <p className="text-xs text-slate-400">CPF: {student.cpf} • Cód: {student.certificateCode}</p>
           </div>
         </div>
 
@@ -243,7 +242,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                 </h3>
                 <div className="w-24 sm:w-36 h-px bg-[#b6944b] mx-auto mb-2 sm:mb-3"></div>
                 <p className="text-[9px] sm:text-xs md:text-sm leading-relaxed text-[#252925] max-w-3xl mx-auto">
-                  CPF nº <strong>{maskCpf(student.cpf)}</strong> e nº de registro{' '}
+                  CPF nº <strong>{student.cpf}</strong> e nº de registro{' '}
                   <strong className="font-semibold text-slate-950">
                     {student.registrationNumber}
                   </strong>
@@ -283,7 +282,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       {template.directorRole}
                     </p>
                     <p className="text-[8px] sm:text-[9px] text-slate-500">
-                      CPF {maskCpf(template.directorCpf)}
+                      CPF {template.directorCpf}
                     </p>
                   </div>
 

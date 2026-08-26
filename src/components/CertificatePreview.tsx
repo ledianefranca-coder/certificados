@@ -176,7 +176,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
           <img 
             src={QGEX_WATERMARK_IMG}
             alt="Marca d'água Exército Brasileiro"
-            className="absolute left-1/2 top-1/2 w-[54%] h-[76%] -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.055] pointer-events-none z-0 select-none"
+            className="absolute inset-0 w-full h-full object-fill opacity-[0.18] pointer-events-none z-0 select-none"
           />
 
           {/* Ornate decorative outer frame */}

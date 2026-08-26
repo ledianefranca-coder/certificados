@@ -1,0 +1,6 @@
+{
+  "name": "Gerador e Validador de Certificados em Massa",
+  "description": "Sistema avançado para geração automatizada e em massa de certificados em alta resolução (Frente e Verso), disparo de e-mails, validação pública via QR Code, cronômetro de benchmark e integração via API para plataformas de ensino.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

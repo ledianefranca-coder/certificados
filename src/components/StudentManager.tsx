@@ -74,7 +74,11 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
   });
 
   const handleOpenAdd = () => {
-    const nextSeq = (students.length + 1).toString().padStart(3, '0');
+    const highestSequence = students.reduce((highest, student) => {
+      const sequence = Number.parseInt(student.certificateCode.split('/')[0], 10);
+      return Number.isFinite(sequence) ? Math.max(highest, sequence) : highest;
+    }, 0);
+    const nextSeq = (highestSequence + 1).toString().padStart(3, '0');
     setEditingStudent(null);
     setFormState({
       name: '',
@@ -122,7 +126,17 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
 
   const handleSaveStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formState.name || !formState.cpf) return;
+    if (
+      !formState.name ||
+      !formState.cpf ||
+      !formState.registrationNumber ||
+      !formState.category ||
+      !formState.certificateCode ||
+      !formState.periodStart ||
+      !formState.periodEnd ||
+      !formState.workload ||
+      !formState.issueDate
+    ) return;
 
     const grades = [
       { discipline: 'Legislação de Trânsito', workload: '10h/a', grade: formState.grade1, instructor: 'PAULO DE JESUS CAMARGO' },
@@ -153,7 +167,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
         id: `std-${Date.now()}`,
         name: formState.name,
         cpf: formState.cpf,
-        registrationNumber: formState.registrationNumber || '00000000000',
+        registrationNumber: formState.registrationNumber,
         category: formState.category,
         email: formState.email || `${formState.name.toLowerCase().replace(/\s+/g, '.')}@exemplo.com`,
         phone: formState.phone,
@@ -193,17 +207,17 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
               id: `csv-${Date.now()}-${i}`,
               name: name.trim().toUpperCase(),
               cpf: cpf.trim(),
-              registrationNumber: row['Registro'] || row['CNH'] || row['registro'] || '07575025319',
+              registrationNumber: row['Registro'] || row['CNH'] || row['registro'] || '',
               category: row['Categoria'] || row['cat'] || 'AD',
               email: row['Email'] || row['email'] || `${name.toLowerCase().replace(/\s+/g, '.')}@email.com`,
               phone: row['Telefone'] || '',
               courseId: 'template-iet-qgex',
               courseName: 'Condutores de Veículos de Transporte de Emergência',
-              periodStart: '08 de junho de 2026',
-              periodEnd: '16 de junho de 2026',
-              workload: '50h/a',
-              issueDate: '18 de junho de 2026',
-              certificateCode: `${nextSeq}/CVTE/2026`,
+              periodStart: row['Início'] || row['Inicio'] || row['Data Inicial'] || '08 de junho de 2026',
+              periodEnd: row['Fim'] || row['Data Final'] || '16 de junho de 2026',
+              workload: row['Carga Horária'] || row['Carga Horaria'] || row['Carga'] || '50h/a',
+              issueDate: row['Data de Emissão'] || row['Data de Emissao'] || row['Emissão'] || '18 de junho de 2026',
+              certificateCode: row['Código do Certificado'] || row['Codigo do Certificado'] || row['Código'] || `${nextSeq}/CVTE/2026`,
               authHash: generateCryptoHash(name + cpf),
               status: 'approved',
               emailSentStatus: 'pending',
@@ -225,10 +239,9 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
   };
 
   const handleDownloadCsvTemplate = () => {
-    const sampleCsv = `Nome,CPF,Registro,Categoria,Email,Telefone
-CARLOS HENRIQUE CAETANO DA SILVA,067.440.731-84,07575025319,AD,carlos.caetano@exemplo.com,(61) 98112-4091
-LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,lediane.franca@gmail.com,(61) 99245-8812
-MARCOS VINICIUS ALMEIDA,512.339.811-09,06193847291,E,marcos.almeida@gmail.com,(61) 98774-1234`;
+    const sampleCsv = `Nome,CPF,Registro,Categoria,Código do Certificado,Início,Fim,Carga Horária,Data de Emissão,Email,Telefone
+CARLOS HENRIQUE CAETANO DA SILVA,067.440.731-84,07575025319,AD,006/CVTE/2026,08 de junho de 2026,16 de junho de 2026,50h/a,18 de junho de 2026,carlos.caetano@exemplo.com,(61) 98112-4091
+LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,007/CVTE/2026,08 de junho de 2026,16 de junho de 2026,50h/a,18 de junho de 2026,lediane.franca@gmail.com,(61) 99245-8812`;
     const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -474,6 +487,19 @@ MARCOS VINICIUS ALMEIDA,512.339.811-09,06193847291,E,marcos.almeida@gmail.com,(6
             </div>
 
             <form onSubmit={handleSaveStudent} className="space-y-4 text-xs sm:text-sm">
+              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+                <p className="font-bold text-emerald-300">Dados institucionais fixos</p>
+                <p className="mt-1 text-xs text-slate-300">
+                  Instituição: Base Administrativa do Quartel-General do Exército - Forte Caxias
+                </p>
+                <p className="text-xs text-slate-300">
+                  Curso: Condutores de Veículos de Transporte de Emergência
+                </p>
+              </div>
+
+              <p className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                Dados variáveis do certificado
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-slate-400 text-xs mb-1">Nome Completo do Aluno *</label>
@@ -499,9 +525,10 @@ MARCOS VINICIUS ALMEIDA,512.339.811-09,06193847291,E,marcos.almeida@gmail.com,(6
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1">Nº Registro CNH</label>
+                  <label className="block text-slate-400 text-xs mb-1">Nº Registro CNH *</label>
                   <input
                     type="text"
+                    required
                     value={formState.registrationNumber}
                     onChange={(e) => setFormState({ ...formState, registrationNumber: e.target.value })}
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
@@ -509,7 +536,7 @@ MARCOS VINICIUS ALMEIDA,512.339.811-09,06193847291,E,marcos.almeida@gmail.com,(6
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1">Categoria CNH</label>
+                  <label className="block text-slate-400 text-xs mb-1">Categoria CNH *</label>
                   <select
                     value={formState.category}
                     onChange={(e) => setFormState({ ...formState, category: e.target.value })}
@@ -524,13 +551,65 @@ MARCOS VINICIUS ALMEIDA,512.339.811-09,06193847291,E,marcos.almeida@gmail.com,(6
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-xs mb-1">Código do Certificado</label>
+                  <label className="block text-slate-400 text-xs mb-1">Código do Certificado *</label>
                   <input
                     type="text"
+                    required
+                    placeholder="006/CVTE/2026"
                     value={formState.certificateCode}
                     onChange={(e) => setFormState({ ...formState, certificateCode: e.target.value })}
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-amber-400 font-mono font-bold focus:outline-none focus:border-amber-500"
                   />
+                </div>
+
+                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+                  <div>
+                    <label className="block text-slate-400 text-xs mb-1">Início do curso *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="08 de junho de 2026"
+                      value={formState.periodStart}
+                      onChange={(e) => setFormState({ ...formState, periodStart: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs mb-1">Fim do curso *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="16 de junho de 2026"
+                      value={formState.periodEnd}
+                      onChange={(e) => setFormState({ ...formState, periodEnd: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs mb-1">Carga horária *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="50h/a"
+                      value={formState.workload}
+                      onChange={(e) => setFormState({ ...formState, workload: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white font-semibold focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs mb-1">Data de emissão *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="18 de junho de 2026"
+                      value={formState.issueDate}
+                      onChange={(e) => setFormState({ ...formState, issueDate: e.target.value })}
+                      className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white font-semibold focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
                 </div>
 
                 <div>

@@ -3,7 +3,6 @@ import QRCode from 'qrcode';
 import JSZip from 'jszip';
 import { CourseTemplate, Student } from '../types';
 import { BADM_QGEX_LOGO_SVG, DIGITAL_SIGNATURE_SVG, QGEX_WATERMARK_IMG, SGEX_LOGO_SVG } from './assets';
-import { maskCpf } from './privacy';
 
 /**
  * Converts SVG Data URI to an Image element or Canvas data URL for jsPDF embedding
@@ -188,7 +187,7 @@ function drawFrontPage(
   doc.setLineWidth(0.45);
   doc.line(w / 2 - 42, 78, w / 2 + 42, 78);
 
-  const bodyText = `CPF nº ${maskCpf(student.cpf)} e nº de registro ${student.registrationNumber}, categoria "${student.category}", concluiu com aproveitamento o Curso Especializado para ${template.courseTitle}, realizado pela IET – Forte Caxias, no período de ${student.periodStart} a ${student.periodEnd}, com carga horária de ${student.workload}, conforme ${template.legalResolution}.`;
+  const bodyText = `CPF nº ${student.cpf} e nº de registro ${student.registrationNumber}, categoria "${student.category}", concluiu com aproveitamento o Curso Especializado para ${template.courseTitle}, realizado pela IET – Forte Caxias, no período de ${student.periodStart} a ${student.periodEnd}, com carga horária de ${student.workload}, conforme ${template.legalResolution}.`;
 
   doc.setFont('times', 'normal');
   doc.setFontSize(11);
@@ -214,7 +213,7 @@ function drawFrontPage(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.text(template.directorRole, 48, 163, { align: 'center' });
-  doc.text(`CPF ${maskCpf(template.directorCpf)}`, 48, 167, { align: 'center' });
+  doc.text(`CPF ${template.directorCpf}`, 48, 167, { align: 'center' });
 
   // Institution CNPJ on bottom right
   doc.setFont('helvetica', 'bold');

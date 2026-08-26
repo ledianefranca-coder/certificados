@@ -230,19 +230,24 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       alt="Brasão B-ADM-QGEX" 
                       className="w-12 sm:w-16 h-auto drop-shadow-sm" 
                     />
+                    <span className="text-[9px] sm:text-xs font-black text-[#1f3a2d] mt-1 block whitespace-nowrap">
+                      {student.certificateCode}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Main Body Text */}
               <div className="my-auto px-6 sm:px-12 text-center font-serif">
-                <p className="text-[9px] sm:text-xs text-[#496a4d] tracking-wide">Certificamos que</p>
+                <p className="text-[8px] sm:text-[10px] md:text-xs leading-relaxed text-[#252925] max-w-3xl mx-auto">
+                  {template.regulationText} certifica que
+                </p>
                 <h3 className="text-base sm:text-2xl md:text-3xl font-semibold uppercase tracking-[0.08em] text-[#1f3a2d] my-2 sm:my-3">
                   {student.name}
                 </h3>
                 <div className="w-24 sm:w-36 h-px bg-[#b6944b] mx-auto mb-2 sm:mb-3"></div>
                 <p className="text-[9px] sm:text-xs md:text-sm leading-relaxed text-[#252925] max-w-3xl mx-auto">
-                  CPF nº <strong>{student.cpf}</strong> e nº de registro{' '}
+                  inscrito no CPF nº <strong>{student.cpf}</strong> e no Nº REGISTRO{' '}
                   <strong className="font-semibold text-slate-950">
                     {student.registrationNumber}
                   </strong>
@@ -252,11 +257,11 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   </strong>
                   , concluiu com aproveitamento o{' '}
                   <strong>Curso Especializado para {template.courseTitle}</strong>
-                  , realizado pela IET – Forte Caxias, no período de{' '}
+                  , ministrado pela IET - Forte Caxias, no período de{' '}
                   <span>
                     {student.periodStart} a {student.periodEnd}
                   </span>
-                  , com carga horária de <strong>{student.workload}</strong>, conforme {template.legalResolution}.
+                  , com carga horária de <strong>{student.workload}</strong>, com validade de cinco anos após o término do curso, conforme {template.legalResolution}.
                 </p>
               </div>
 

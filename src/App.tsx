@@ -17,6 +17,15 @@ import { VercelDeployGuide } from './components/VercelDeployGuide';
 import { CourseTemplate, Student } from './types';
 import { DEFAULT_TEMPLATE, INITIAL_STUDENTS } from './utils/sampleData';
 
+const withFixedInstitutionalData = (template: CourseTemplate): CourseTemplate => ({
+  ...template,
+  institutionName: DEFAULT_TEMPLATE.institutionName,
+  institutionSubtext: DEFAULT_TEMPLATE.institutionSubtext,
+  regulationText: DEFAULT_TEMPLATE.regulationText,
+  courseTitle: DEFAULT_TEMPLATE.courseTitle,
+  legalResolution: DEFAULT_TEMPLATE.legalResolution,
+});
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('generator');
   const [students, setStudents] = useState<Student[]>(() => {
@@ -26,8 +35,12 @@ export default function App() {
 
   const [currentTemplate, setCurrentTemplate] = useState<CourseTemplate>(() => {
     const saved = localStorage.getItem('cert_template');
-    return saved ? JSON.parse(saved) : DEFAULT_TEMPLATE;
+    return saved ? withFixedInstitutionalData(JSON.parse(saved)) : DEFAULT_TEMPLATE;
   });
+
+  const handleTemplateUpdate = (template: CourseTemplate) => {
+    setCurrentTemplate(withFixedInstitutionalData(template));
+  };
 
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number>(0);
   const [verifyParamCode, setVerifyParamCode] = useState<string>('');
@@ -155,8 +168,8 @@ export default function App() {
         {activeTab === 'templates' && (
           <TemplateEditor
             currentTemplate={currentTemplate}
-            onUpdateTemplate={setCurrentTemplate}
-            onSelectTemplate={setCurrentTemplate}
+            onUpdateTemplate={handleTemplateUpdate}
+            onSelectTemplate={handleTemplateUpdate}
           />
         )}
 

@@ -4,11 +4,7 @@ import {
   Users, 
   Layers, 
   Mail, 
-  Code2, 
   CheckCircle2, 
-  Timer, 
-  FileSpreadsheet, 
-  Github, 
   Sparkles
 } from 'lucide-react';
 
@@ -35,14 +31,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   }
 
   const navItems: NavItem[] = [
-    { id: 'generator', label: 'Visualizador & Editor', icon: Award },
+    { id: 'generator', label: 'Gerar certificado', icon: Award },
     { id: 'students', label: `Alunos (${studentsCount})`, icon: Users },
-    { id: 'certificates', label: `Emitidos (${issuedCount})`, icon: CheckCircle2 },
-    { id: 'templates', label: 'Modelos & Variáveis', icon: Layers },
-    { id: 'emails', label: `Disparo de E-mails ${pendingCount > 0 ? `(${pendingCount})` : ''}`, icon: Mail },
-    { id: 'api', label: 'API & Webhooks LMS', icon: Code2 },
-    { id: 'validator', label: 'Validador QR', icon: Sparkles },
-    { id: 'deploy', label: 'Deploy Vercel / GitHub', icon: Github },
+    { id: 'certificates', label: `Certificados (${issuedCount})`, icon: CheckCircle2 },
+    { id: 'templates', label: 'Modelos', icon: Layers },
+    { id: 'emails', label: `Enviar por e-mail ${pendingCount > 0 ? `(${pendingCount})` : ''}`, icon: Mail },
+    { id: 'validator', label: 'Validar certificado', icon: Sparkles },
   ];
 
   return (
@@ -55,12 +49,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab('generator')} 
             className="flex items-center space-x-3 cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
-              <Award className="w-6 h-6 text-slate-950" />
+            <div className="w-10 h-10 rounded-xl bg-[#b6944b] flex items-center justify-center shadow-lg shadow-black/20 group-hover:scale-105 transition-transform">
+              <Award className="w-6 h-6 text-[#14271d]" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-lg tracking-tight text-white">Certificado</span>
+                <span className="font-bold text-lg tracking-tight text-white">Certifica IET</span>
               </div>
               <p className="text-xs text-slate-400 hidden sm:block">
                 Instituição de Ensino de Trânsito da Base Administrativa do QGEx
@@ -81,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 font-semibold shadow-sm'
+                    ? 'bg-[#b6944b] text-[#14271d] font-semibold shadow-sm'
                     : item.highlight
                     ? 'bg-slate-800 text-amber-400 hover:bg-slate-700/80 border border-amber-500/30'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'

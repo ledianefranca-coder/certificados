@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import JSZip from 'jszip';
 import { CourseTemplate, Student } from '../types';
 import { BADM_QGEX_LOGO_SVG, DIGITAL_SIGNATURE_SVG, QGEX_WATERMARK_IMG, SGEX_LOGO_SVG } from './assets';
+import { maskCpf } from './privacy';
 
 /**
  * Converts SVG Data URI to an Image element or Canvas data URL for jsPDF embedding
@@ -67,7 +68,7 @@ export async function preloadAssets(): Promise<void> {
     cachedSignaturePng = await svgToPngDataUrl(DIGITAL_SIGNATURE_SVG, 520, 180);
   }
   if (!cachedWatermarkPng) {
-    cachedWatermarkPng = await loadWatermarkDataUrl(QGEX_WATERMARK_IMG, 0.13);
+    cachedWatermarkPng = await loadWatermarkDataUrl(QGEX_WATERMARK_IMG, 0.055);
   }
 }
 
@@ -130,34 +131,23 @@ function drawFrontPage(
   w: number,
   h: number
 ) {
-  // Background clean tone
-  doc.setFillColor(255, 255, 255);
+  // Marfim suave e moldura institucional contemporânea
+  doc.setFillColor(250, 248, 241);
   doc.rect(0, 0, w, h, 'F');
 
   // Watermark Background (Full Certificate Coverage)
   if (cachedWatermarkPng) {
-    doc.addImage(cachedWatermarkPng, 'PNG', 0, 0, w, h);
+    doc.addImage(cachedWatermarkPng, 'PNG', 61, 31, 175, 148);
   }
 
   // Ornate double border
-  doc.setDrawColor(20, 20, 20);
-  doc.setLineWidth(1.2);
+  doc.setDrawColor(31, 58, 45);
+  doc.setLineWidth(1.5);
   doc.rect(10, 10, w - 20, h - 20);
 
-  doc.setLineWidth(0.4);
+  doc.setDrawColor(182, 148, 75);
+  doc.setLineWidth(0.55);
   doc.rect(12.5, 12.5, w - 25, h - 25);
-
-  // Corner decorative marks
-  const corners = [
-    [10, 10],
-    [w - 10, 10],
-    [10, h - 10],
-    [w - 10, h - 10],
-  ];
-  corners.forEach(([cx, cy]) => {
-    doc.setFillColor(20, 20, 20);
-    doc.circle(cx + (cx === 10 ? 3 : -3), cy + (cy === 10 ? 3 : -3), 1.2, 'F');
-  });
 
   // Top Logos (SGEX on left, B-ADM-QGEX on right)
   if (cachedSgexPng) {
@@ -167,56 +157,50 @@ function drawFrontPage(
     doc.addImage(cachedBadmPng, 'PNG', w - 36, 16, 18, 24.75);
   }
 
-  // Title: "CERTIFICADO" in stylized orange font
-  doc.setTextColor(215, 95, 15); // Authentic Warm Orange
+  doc.setTextColor(73, 106, 77);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(28);
-  doc.text('CERTIFICADO', w / 2, 34, { align: 'center' });
+  doc.setFontSize(7.5);
+  doc.text('INSTITUIÇÃO DE ENSINO DE TRÂNSITO', w / 2, 22, { align: 'center', charSpace: 1.2 });
+
+  // Título principal
+  doc.setTextColor(31, 58, 45);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(27);
+  doc.text(template.title || 'CERTIFICADO', w / 2, 34, { align: 'center', charSpace: 1.6 });
 
   // Center ornament underline
-  doc.setDrawColor(30, 41, 59);
-  doc.setLineWidth(0.6);
-  doc.line(w / 2 - 35, 38, w / 2 + 35, 38);
-  doc.circle(w / 2, 38, 1.2, 'FD');
-  doc.circle(w / 2 - 35, 38, 0.8, 'F');
-  doc.circle(w / 2 + 35, 38, 0.8, 'F');
+  doc.setDrawColor(182, 148, 75);
+  doc.setLineWidth(0.55);
+  doc.line(w / 2 - 28, 39, w / 2 + 28, 39);
 
   // Subtitle / Course Name
-  doc.setTextColor(15, 23, 42);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text(template.courseTitle, w / 2, 45, { align: 'center' });
-
-  // Certificate sequence / ID on top right
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.text(student.certificateCode, w - 27, 46, { align: 'center' });
-
-  // Middle scroll ornament
-  doc.setDrawColor(30, 41, 59);
-  doc.setLineWidth(0.5);
-  doc.line(w / 2 - 40, 56, w / 2 + 40, 56);
-  doc.circle(w / 2, 56, 1.5, 'FD');
-  doc.circle(w / 2 - 12, 56, 1, 'FD');
-  doc.circle(w / 2 + 12, 56, 1, 'FD');
-
-  // Main Body Text with dynamic variable data
-  const bodyText = `${template.regulationText} certifica que ${student.name.toUpperCase()}, inscrito no CPF nº ${student.cpf} e no Nº REGISTRO ${student.registrationNumber}, categoria "${student.category}", concluiu com aproveitamento o Curso Especializado para ${template.courseTitle}, ministrado pela IET - Forte Caxias, no período de ${student.periodStart} a ${student.periodEnd}, com carga horária de ${student.workload}, com validade de cinco anos após o término do curso, conforme ${template.legalResolution}.`;
-
+  doc.setTextColor(73, 106, 77);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11.2);
-  doc.setTextColor(20, 20, 20);
-  
-  const textLines = doc.splitTextToSize(bodyText, w - 46);
-  doc.text(textLines, 23, 76, {
-    lineHeightFactor: 1.5,
-    maxWidth: w - 46,
-  });
+  doc.setFontSize(8.5);
+  doc.text('Certificamos que', w / 2, 57, { align: 'center' });
+
+  doc.setTextColor(31, 58, 45);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(student.name.length > 36 ? 20 : 24);
+  doc.text(student.name.toUpperCase(), w / 2, 72, { align: 'center', maxWidth: w - 64 });
+
+  doc.setDrawColor(182, 148, 75);
+  doc.setLineWidth(0.45);
+  doc.line(w / 2 - 42, 78, w / 2 + 42, 78);
+
+  const bodyText = `CPF nº ${maskCpf(student.cpf)} e nº de registro ${student.registrationNumber}, categoria "${student.category}", concluiu com aproveitamento o Curso Especializado para ${template.courseTitle}, realizado pela IET – Forte Caxias, no período de ${student.periodStart} a ${student.periodEnd}, com carga horária de ${student.workload}, conforme ${template.legalResolution}.`;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(37, 41, 37);
+  const textLines = doc.splitTextToSize(bodyText, w - 70);
+  doc.text(textLines, w / 2, 91, { align: 'center', lineHeightFactor: 1.45, maxWidth: w - 70 });
 
   // City & Date
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text(`Brasília-DF, ${student.issueDate}`, w / 2, 136, { align: 'center' });
+  doc.setTextColor(31, 58, 45);
+  doc.text(`${template.baseLocation}, ${student.issueDate}`, w / 2, 137, { align: 'center' });
 
   // Digital Signature on bottom left
   if (cachedSignaturePng) {
@@ -230,7 +214,7 @@ function drawFrontPage(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.text(template.directorRole, 48, 163, { align: 'center' });
-  doc.text(template.directorCpf, 48, 167, { align: 'center' });
+  doc.text(`CPF ${maskCpf(template.directorCpf)}`, 48, 167, { align: 'center' });
 
   // Institution CNPJ on bottom right
   doc.setFont('helvetica', 'bold');
@@ -239,11 +223,11 @@ function drawFrontPage(
   doc.setFontSize(7.5);
   doc.text(template.institutionName, w - 24, 164, { align: 'right' });
 
-  // Small bottom authenticity token
+  // Identificação e orientação de verificação
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(100, 116, 139);
-  doc.text(`Autenticidade Digital: ${student.authHash} | Validação: Sistema Nacional de Certificados`, w / 2, h - 14, { align: 'center' });
+  doc.text(`Certificado nº ${student.certificateCode}  •  Consulte a autenticidade pelo QR Code no verso`, w / 2, h - 14, { align: 'center' });
 }
 
 function drawBackPage(
@@ -254,20 +238,21 @@ function drawBackPage(
   h: number,
   qrCodeDataUrl: string
 ) {
-  // Clean white background
-  doc.setFillColor(255, 255, 255);
+  // Fundo e moldura em continuidade com a frente
+  doc.setFillColor(250, 248, 241);
   doc.rect(0, 0, w, h, 'F');
 
   // Watermark Background (Full Certificate Coverage)
   if (cachedWatermarkPng) {
-    doc.addImage(cachedWatermarkPng, 'PNG', 0, 0, w, h);
+    doc.addImage(cachedWatermarkPng, 'PNG', 61, 31, 175, 148);
   }
 
   // Outer border
-  doc.setDrawColor(20, 20, 20);
-  doc.setLineWidth(1.2);
+  doc.setDrawColor(31, 58, 45);
+  doc.setLineWidth(1.5);
   doc.rect(10, 10, w - 20, h - 20);
-  doc.setLineWidth(0.4);
+  doc.setDrawColor(182, 148, 75);
+  doc.setLineWidth(0.55);
   doc.rect(12.5, 12.5, w - 25, h - 25);
 
   // Top Header: SGEX, Institution Name, B-ADM-QGEX
@@ -369,18 +354,18 @@ function drawBackPage(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(15, 23, 42);
-  doc.text('VALIDAÇÃO DIGITAL & AUTENTICIDADE', w - 50, qrBoxY + 5, { align: 'right' });
+  doc.text('VERIFICAÇÃO DE AUTENTICIDADE', w - 50, qrBoxY + 5, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.5);
   doc.setTextColor(71, 85, 105);
   doc.text(`Código de Registro: ${student.certificateCode}`, w - 50, qrBoxY + 9, { align: 'right' });
   doc.text(`Hash de Segurança: ${student.authHash}`, w - 50, qrBoxY + 13, { align: 'right' });
-  doc.text('Aponte a câmera do celular para consultar o registro oficial.', w - 50, qrBoxY + 17, { align: 'right' });
+  doc.text('Aponte a câmera para consultar este registro institucional.', w - 50, qrBoxY + 17, { align: 'right' });
 
   // Official disclaimer
   doc.setFontSize(6.5);
   doc.setTextColor(100, 116, 139);
-  doc.text(`Emitido em ${student.issueDate} • Válido em todo o território nacional conforme legislação do CONTRAN.`, 22, h - 14);
+  doc.text(`Emitido em ${student.issueDate} • Documento sujeito à conferência pela instituição emissora.`, 22, h - 14);
 }
 
 /**

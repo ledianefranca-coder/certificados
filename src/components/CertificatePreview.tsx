@@ -12,8 +12,9 @@ import {
   Share2
 } from 'lucide-react';
 import { CourseTemplate, Student } from '../types';
-import { BADM_QGEX_LOGO_SVG, DIGITAL_SIGNATURE_SVG, FORTE_CAXIAS_WATERMARK_SVG, ORNAMENT_HEADER_SVG, QGEX_WATERMARK_IMG, SGEX_LOGO_SVG } from '../utils/assets';
+import { BADM_QGEX_LOGO_SVG, DIGITAL_SIGNATURE_SVG, QGEX_WATERMARK_IMG, SGEX_LOGO_SVG } from '../utils/assets';
 import { generateCertificatePdf } from '../utils/pdfGenerator';
+import { maskCpf } from '../utils/privacy';
 
 interface CertificatePreviewProps {
   students: Student[];
@@ -102,7 +103,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
           <div className="hidden md:block text-left">
             <p className="text-sm font-bold text-white truncate max-w-xs">{student.name}</p>
-            <p className="text-xs text-slate-400">CPF: {student.cpf} • Cód: {student.certificateCode}</p>
+            <p className="text-xs text-slate-400">CPF: {maskCpf(student.cpf)} • Cód: {student.certificateCode}</p>
           </div>
         </div>
 
@@ -165,7 +166,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
         {/* Certificate Landscape Container */}
         <div 
           id="certificate-viewport"
-          className="relative w-full bg-white text-slate-900 rounded-sm shadow-2xl border-4 border-slate-900 selection:bg-amber-100 overflow-hidden"
+          className="relative w-full bg-[#faf8f1] text-[#252925] rounded-sm shadow-2xl border-[5px] border-[#1f3a2d] selection:bg-amber-100 overflow-hidden"
           style={{
             aspectRatio: '297 / 210',
             maxWidth: '920px',
@@ -175,12 +176,12 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
           <img 
             src={QGEX_WATERMARK_IMG}
             alt="Marca d'água Exército Brasileiro"
-            className="absolute inset-0 w-full h-full object-fill opacity-[0.18] pointer-events-none z-0 select-none"
+            className="absolute left-1/2 top-1/2 w-[54%] h-[76%] -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.055] pointer-events-none z-0 select-none"
           />
 
           {/* Ornate decorative outer frame */}
-          <div className="absolute inset-2 border-2 border-slate-900 pointer-events-none z-20"></div>
-          <div className="absolute inset-3 border border-slate-800/60 pointer-events-none z-20"></div>
+          <div className="absolute inset-2 border border-[#b6944b] pointer-events-none z-20"></div>
+          <div className="absolute inset-3 border border-[#1f3a2d]/35 pointer-events-none z-20"></div>
           
           {/* 4 Corner Ornaments */}
           <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-slate-900 z-20"></div>
@@ -207,14 +208,18 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
 
                   {/* Center Title & Subtitle */}
                   <div className="text-center px-4 flex-1">
+                    <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-[#496a4d]">
+                      Instituição de Ensino de Trânsito
+                    </p>
                     <h1 
-                      className="text-2xl sm:text-4xl font-extrabold tracking-wide uppercase font-serif text-[#C85A00]"
+                      className="text-2xl sm:text-4xl font-semibold tracking-wide uppercase font-serif text-[#1f3a2d] mt-1"
                       style={{ letterSpacing: '0.08em' }}
                     >
                       CERTIFICADO
                     </h1>
                     
-                    <h2 className="text-xs sm:text-base font-bold text-slate-900 tracking-tight mt-1">
+                    <div className="w-20 sm:w-28 h-px bg-[#b6944b] mx-auto my-1.5"></div>
+                    <h2 className="text-[10px] sm:text-sm font-semibold text-[#496a4d] tracking-tight">
                       {template.courseTitle}
                     </h2>
                   </div>
@@ -226,25 +231,19 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       alt="Brasão B-ADM-QGEX" 
                       className="w-12 sm:w-16 h-auto drop-shadow-sm" 
                     />
-                    <span className="text-[10px] sm:text-xs font-black text-slate-950 mt-1 block">
-                      {student.certificateCode}
-                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Main Body Text */}
-              <div className="my-auto px-4 sm:px-8 text-center text-xs sm:text-sm md:text-[15px] leading-relaxed sm:leading-loose text-slate-900 font-serif">
-                <p className="text-justify indent-6">
-                  {template.regulationText} certifica que{' '}
-                  <strong className="font-bold uppercase tracking-wider text-slate-950">
-                    {student.name}
-                  </strong>
-                  , inscrito no CPF nº{' '}
-                  <strong className="font-semibold text-slate-950">
-                    {student.cpf}
-                  </strong>{' '}
-                  e no Nº REGISTRO{' '}
+              <div className="my-auto px-6 sm:px-12 text-center font-serif">
+                <p className="text-[9px] sm:text-xs text-[#496a4d] tracking-wide">Certificamos que</p>
+                <h3 className="text-base sm:text-2xl md:text-3xl font-semibold uppercase tracking-[0.08em] text-[#1f3a2d] my-2 sm:my-3">
+                  {student.name}
+                </h3>
+                <div className="w-24 sm:w-36 h-px bg-[#b6944b] mx-auto mb-2 sm:mb-3"></div>
+                <p className="text-[9px] sm:text-xs md:text-sm leading-relaxed text-[#252925] max-w-3xl mx-auto">
+                  CPF nº <strong>{maskCpf(student.cpf)}</strong> e nº de registro{' '}
                   <strong className="font-semibold text-slate-950">
                     {student.registrationNumber}
                   </strong>
@@ -254,13 +253,11 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                   </strong>
                   , concluiu com aproveitamento o{' '}
                   <strong>Curso Especializado para {template.courseTitle}</strong>
-                  , ministrado pela IET - Forte Caxias, no período de{' '}
+                  , realizado pela IET – Forte Caxias, no período de{' '}
                   <span>
                     {student.periodStart} a {student.periodEnd}
                   </span>
-                  , com carga horária de{' '}
-                  <strong>{student.workload}</strong>
-                  , com validade de cinco anos após o término do curso, conforme {template.legalResolution}.
+                  , com carga horária de <strong>{student.workload}</strong>, conforme {template.legalResolution}.
                 </p>
               </div>
 
@@ -286,7 +283,7 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                       {template.directorRole}
                     </p>
                     <p className="text-[8px] sm:text-[9px] text-slate-500">
-                      {template.directorCpf}
+                      CPF {maskCpf(template.directorCpf)}
                     </p>
                   </div>
 
@@ -302,9 +299,9 @@ export const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                 </div>
 
                 {/* Micro Security / Auth Hash */}
-                <div className="mt-2 text-center text-[8px] text-slate-500 border-t border-slate-200 pt-1 flex justify-between px-4">
-                  <span>Código de Autenticação: <strong>{student.authHash}</strong></span>
-                  <span>Validação Eletrônica Oficial</span>
+                <div className="mt-2 text-center text-[8px] text-slate-500 border-t border-[#b6944b]/40 pt-1 flex justify-between px-4">
+                  <span>Certificado nº <strong>{student.certificateCode}</strong></span>
+                  <span>Consulte a autenticidade pelo QR Code no verso</span>
                 </div>
               </div>
             </div>

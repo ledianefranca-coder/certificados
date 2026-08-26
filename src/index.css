@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-slate-950: #121c13;
-  --color-slate-900: #19271a;
+  --color-slate-950: #102019;
+  --color-slate-900: #16291f;
   --color-slate-850: #1f3121;
   --color-slate-800: #273d2a;
   --color-slate-700: #37533b;
@@ -13,6 +13,10 @@
   --color-slate-200: #e3ede6;
   --color-slate-100: #f2f7f3;
   --color-slate-50: #f9fbf9;
+}
+
+body {
+  background: #102019;
 }
 
 @layer utilities {
@@ -41,4 +45,3 @@
 .animate-fadeIn {
   animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-

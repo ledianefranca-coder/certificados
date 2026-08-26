@@ -68,7 +68,7 @@ export async function preloadAssets(): Promise<void> {
     cachedSignaturePng = await svgToPngDataUrl(DIGITAL_SIGNATURE_SVG, 520, 180);
   }
   if (!cachedWatermarkPng) {
-    cachedWatermarkPng = await loadWatermarkDataUrl(QGEX_WATERMARK_IMG, 0.055);
+    cachedWatermarkPng = await loadWatermarkDataUrl(QGEX_WATERMARK_IMG, 0.13);
   }
 }
 
@@ -137,7 +137,7 @@ function drawFrontPage(
 
   // Watermark Background (Full Certificate Coverage)
   if (cachedWatermarkPng) {
-    doc.addImage(cachedWatermarkPng, 'PNG', 61, 31, 175, 148);
+    doc.addImage(cachedWatermarkPng, 'PNG', 0, 0, w, h);
   }
 
   // Ornate double border
@@ -244,7 +244,7 @@ function drawBackPage(
 
   // Watermark Background (Full Certificate Coverage)
   if (cachedWatermarkPng) {
-    doc.addImage(cachedWatermarkPng, 'PNG', 61, 31, 175, 148);
+    doc.addImage(cachedWatermarkPng, 'PNG', 0, 0, w, h);
   }
 
   // Outer border

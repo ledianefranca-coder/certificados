@@ -172,28 +172,42 @@ function drawFrontPage(
   doc.setLineWidth(0.55);
   doc.line(w / 2 - 28, 39, w / 2 + 28, 39);
 
-  // Subtitle / Course Name
+  // Nome fixo do curso
   doc.setTextColor(73, 106, 77);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.text('Certificamos que', w / 2, 57, { align: 'center' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  const courseLines = doc.splitTextToSize(template.courseTitle, 105);
+  doc.text(courseLines, w / 2, 45, { align: 'center', lineHeightFactor: 1.15 });
+
+  // Código variável abaixo do brasão B-ADM-QGEx
+  doc.setTextColor(31, 58, 45);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(student.certificateCode, w - 27, 46, { align: 'center' });
+
+  // Texto institucional fixo antes do nome
+  doc.setTextColor(37, 41, 37);
+  doc.setFont('times', 'normal');
+  doc.setFontSize(8.4);
+  const regulationLines = doc.splitTextToSize(`${template.regulationText} certifica que`, w - 70);
+  doc.text(regulationLines, w / 2, 57, { align: 'center', lineHeightFactor: 1.3, maxWidth: w - 70 });
 
   doc.setTextColor(31, 58, 45);
   doc.setFont('times', 'bold');
   doc.setFontSize(student.name.length > 36 ? 20 : 24);
-  doc.text(student.name.toUpperCase(), w / 2, 72, { align: 'center', maxWidth: w - 64 });
+  doc.text(student.name.toUpperCase(), w / 2, 75, { align: 'center', maxWidth: w - 64 });
 
   doc.setDrawColor(182, 148, 75);
   doc.setLineWidth(0.45);
-  doc.line(w / 2 - 42, 78, w / 2 + 42, 78);
+  doc.line(w / 2 - 42, 81, w / 2 + 42, 81);
 
-  const bodyText = `CPF nº ${student.cpf} e nº de registro ${student.registrationNumber}, categoria "${student.category}", concluiu com aproveitamento o Curso Especializado para ${template.courseTitle}, realizado pela IET – Forte Caxias, no período de ${student.periodStart} a ${student.periodEnd}, com carga horária de ${student.workload}, conforme ${template.legalResolution}.`;
+  const bodyText = `inscrito no CPF nº ${student.cpf} e no Nº REGISTRO ${student.registrationNumber}, categoria "${student.category}", concluiu com aproveitamento o Curso Especializado para ${template.courseTitle}, ministrado pela IET - Forte Caxias, no período de ${student.periodStart} a ${student.periodEnd}, com carga horária de ${student.workload}, com validade de cinco anos após o término do curso, conforme ${template.legalResolution}.`;
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(11);
+  doc.setFontSize(10.4);
   doc.setTextColor(37, 41, 37);
   const textLines = doc.splitTextToSize(bodyText, w - 70);
-  doc.text(textLines, w / 2, 91, { align: 'center', lineHeightFactor: 1.45, maxWidth: w - 70 });
+  doc.text(textLines, w / 2, 91, { align: 'center', lineHeightFactor: 1.35, maxWidth: w - 70 });
 
   // City & Date
   doc.setFont('helvetica', 'bold');

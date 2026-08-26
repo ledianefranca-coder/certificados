@@ -148,8 +148,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               <input
                 type="text"
                 value={template.courseTitle}
-                onChange={(e) => setTemplate({ ...template, courseTitle: e.target.value })}
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white font-bold focus:border-amber-500"
+                readOnly
+                title="Campo institucional fixo"
+                className="w-full p-2.5 bg-slate-950/60 border border-emerald-500/30 rounded-lg text-emerald-200 font-bold cursor-not-allowed"
               />
             </div>
 
@@ -160,8 +161,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               <textarea
                 rows={3}
                 value={template.regulationText}
-                onChange={(e) => setTemplate({ ...template, regulationText: e.target.value })}
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white focus:border-amber-500 leading-relaxed font-mono text-xs"
+                readOnly
+                title="Campo institucional fixo"
+                className="w-full p-2.5 bg-slate-950/60 border border-emerald-500/30 rounded-lg text-emerald-200 cursor-not-allowed leading-relaxed font-mono text-xs"
               />
             </div>
 
@@ -172,8 +174,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               <input
                 type="text"
                 value={template.legalResolution}
-                onChange={(e) => setTemplate({ ...template, legalResolution: e.target.value })}
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white focus:border-amber-500"
+                readOnly
+                title="Campo institucional fixo"
+                className="w-full p-2.5 bg-slate-950/60 border border-emerald-500/30 rounded-lg text-emerald-200 cursor-not-allowed"
               />
             </div>
 
@@ -242,8 +245,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               <input
                 type="text"
                 value={template.institutionName}
-                onChange={(e) => setTemplate({ ...template, institutionName: e.target.value })}
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white uppercase focus:border-amber-500"
+                readOnly
+                title="Campo institucional fixo"
+                className="w-full p-2.5 bg-slate-950/60 border border-emerald-500/30 rounded-lg text-emerald-200 uppercase cursor-not-allowed"
               />
             </div>
           </div>

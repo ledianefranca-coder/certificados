@@ -15,6 +15,7 @@ import {
   Eye
 } from 'lucide-react';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import { Student } from '../types';
 import { generateCryptoHash } from '../utils/sampleData';
 
@@ -41,6 +42,9 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
 
   // CSV Paste content
   const [csvText, setCsvText] = useState('');
+  const [spreadsheetFile, setSpreadsheetFile] = useState<File | null>(null);
+  const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
+  const [importFeedback, setImportFeedback] = useState('');
 
   // Form State for Add / Edit
   const [formState, setFormState] = useState({
@@ -190,68 +194,122 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
     setIsModalOpen(false);
   };
 
+  const getCell = (row: Record<string, unknown>, aliases: string[]) => {
+    for (const alias of aliases) {
+      const value = row[alias];
+      if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+    }
+    return '';
+  };
+
+  const processSpreadsheetRows = (rows: Record<string, unknown>[]) => {
+    let importedCount = 0;
+    let invalidCount = 0;
+
+    rows.forEach((row, index) => {
+      const name = getCell(row, ['Nome', 'nome', 'NOME', 'Aluno']);
+      const cpf = getCell(row, ['CPF', 'cpf']).replace(/\D/g, '').slice(0, 11);
+      const registrationNumber = getCell(row, ['Registro', 'CNH', 'registro']).replace(/\D/g, '').slice(0, 11);
+      const category = getCell(row, ['Categoria', 'categoria', 'cat']);
+      const certificateCode = getCell(row, ['Código do Certificado', 'Codigo do Certificado', 'Código', 'Codigo']);
+      const periodStart = getCell(row, ['Início', 'Inicio', 'Data Inicial']);
+      const periodEnd = getCell(row, ['Fim', 'Data Final']);
+      const workload = getCell(row, ['Carga Horária', 'Carga Horaria', 'Carga']);
+      const issueDate = getCell(row, ['Data de Emissão', 'Data de Emissao', 'Emissão', 'Emissao']);
+
+      if (
+        !name || cpf.length !== 11 || registrationNumber.length !== 11 || !category ||
+        !certificateCode || !periodStart || !periodEnd || !workload || !issueDate
+      ) {
+        invalidCount++;
+        return;
+      }
+
+      const email = getCell(row, ['Email', 'E-mail', 'email']);
+      const phone = getCell(row, ['Telefone', 'telefone']);
+      const newStudent: Student = {
+        id: `planilha-${Date.now()}-${index}`,
+        name: name.toUpperCase(),
+        cpf,
+        registrationNumber,
+        category: category.toUpperCase(),
+        email: email || `${name.toLowerCase().replace(/\s+/g, '.')}@email.com`,
+        phone,
+        courseId: 'template-iet-qgex',
+        courseName: 'Condutores de Veículos de Transporte de Emergência',
+        periodStart,
+        periodEnd,
+        workload,
+        issueDate,
+        certificateCode,
+        authHash: generateCryptoHash(name + cpf + certificateCode),
+        status: 'approved',
+        emailSentStatus: 'pending',
+        grades: [
+          { discipline: 'Legislação de Trânsito', workload: '10h/a', grade: getCell(row, ['Nota Legislação', 'Nota Legislacao']) || '10', instructor: 'PAULO DE JESUS CAMARGO' },
+          { discipline: 'Direção Defensiva', workload: '15h/a', grade: getCell(row, ['Nota Direção Defensiva', 'Nota Direcao Defensiva']) || '10', instructor: 'ERIK ANDRE RODRIGUES SANTIAGO' },
+          { discipline: 'Primeiros Socorros e Atendimento Inicial', workload: '15h/a', grade: getCell(row, ['Nota Primeiros Socorros']) || '10', instructor: 'FELIPE VILELA DA COSTA' },
+          { discipline: 'Comportamento e Convívio Social', workload: '10h/a', grade: getCell(row, ['Nota Convívio Social', 'Nota Convivio Social']) || '10', instructor: 'ERIK ANDRE RODRIGUES SANTIAGO' },
+        ],
+      };
+
+      onAddStudent(newStudent);
+      importedCount++;
+    });
+
+    setImportFeedback(`${importedCount} aluno(s) importado(s).${invalidCount ? ` ${invalidCount} linha(s) ignorada(s) por dados ausentes ou inválidos.` : ''}`);
+    setCsvText('');
+    setSpreadsheetFile(null);
+    if (importedCount > 0) setIsCsvModalOpen(false);
+  };
+
   const handleCsvImport = () => {
     if (!csvText.trim()) return;
-
-    Papa.parse(csvText, {
+    Papa.parse<Record<string, unknown>>(csvText, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
-        let count = 0;
-        const rows = results.data as Record<string, string>[];
-        
-        rows.forEach((row, i) => {
-          const name = row['Nome'] || row['nome'] || row['NOME'] || row['Aluno'] || '';
-          const cpf = (row['CPF'] || row['cpf'] || '').replace(/\D/g, '').slice(0, 11);
-          const registrationNumber = (row['Registro'] || row['CNH'] || row['registro'] || '').replace(/\D/g, '').slice(0, 11);
-          if (name && cpf.length === 11 && registrationNumber.length === 11) {
-            const nextSeq = (students.length + count + 1).toString().padStart(3, '0');
-            const newStudent: Student = {
-              id: `csv-${Date.now()}-${i}`,
-              name: name.trim().toUpperCase(),
-              cpf: cpf.trim(),
-              registrationNumber,
-              category: row['Categoria'] || row['cat'] || 'AD',
-              email: row['Email'] || row['email'] || `${name.toLowerCase().replace(/\s+/g, '.')}@email.com`,
-              phone: row['Telefone'] || '',
-              courseId: 'template-iet-qgex',
-              courseName: 'Condutores de Veículos de Transporte de Emergência',
-              periodStart: row['Início'] || row['Inicio'] || row['Data Inicial'] || '08 de junho de 2026',
-              periodEnd: row['Fim'] || row['Data Final'] || '16 de junho de 2026',
-              workload: row['Carga Horária'] || row['Carga Horaria'] || row['Carga'] || '50h/a',
-              issueDate: row['Data de Emissão'] || row['Data de Emissao'] || row['Emissão'] || '18 de junho de 2026',
-              certificateCode: row['Código do Certificado'] || row['Codigo do Certificado'] || row['Código'] || `${nextSeq}/CVTE/2026`,
-              authHash: generateCryptoHash(name + cpf),
-              status: 'approved',
-              emailSentStatus: 'pending',
-              grades: [
-                { discipline: 'Legislação de Trânsito', workload: '10h/a', grade: '10', instructor: 'PAULO DE JESUS CAMARGO' },
-                { discipline: 'Direção Defensiva', workload: '15h/a', grade: '9,5', instructor: 'ERIK ANDRE RODRIGUES SANTIAGO' },
-                { discipline: 'Primeiros Socorros e Atendimento Inicial', workload: '15h/a', grade: '10', instructor: 'FELIPE VILELA DA COSTA' },
-                { discipline: 'Comportamento e Convívio Social', workload: '10h/a', grade: '10', instructor: 'ERIK ANDRE RODRIGUES SANTIAGO' },
-              ],
-            };
-            onAddStudent(newStudent);
-            count++;
-          }
-        });
-        setCsvText('');
-        setIsCsvModalOpen(false);
-      },
+      complete: (results) => processSpreadsheetRows(results.data),
     });
   };
 
-  const handleDownloadCsvTemplate = () => {
-    const sampleCsv = `Nome,CPF,Registro,Categoria,Código do Certificado,Início,Fim,Carga Horária,Data de Emissão,Email,Telefone
-CARLOS HENRIQUE CAETANO DA SILVA,067.440.731-84,07575025319,AD,006/CVTE/2026,08 de junho de 2026,16 de junho de 2026,50h/a,18 de junho de 2026,carlos.caetano@exemplo.com,(61) 98112-4091
-LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,007/CVTE/2026,08 de junho de 2026,16 de junho de 2026,50h/a,18 de junho de 2026,lediane.franca@gmail.com,(61) 99245-8812`;
-    const blob = new Blob([sampleCsv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'modelo_importacao_alunos_mala_direta.csv';
-    link.click();
-    URL.revokeObjectURL(url);
+  const handleSpreadsheetImport = async () => {
+    if (!spreadsheetFile) return;
+    setIsImportingSpreadsheet(true);
+    setImportFeedback('');
+
+    try {
+      const data = await spreadsheetFile.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+      const firstSheetName = workbook.SheetNames[0];
+      if (!firstSheetName) throw new Error('A planilha não possui abas.');
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[firstSheetName], {
+        defval: '',
+        raw: false,
+      });
+      processSpreadsheetRows(rows);
+    } catch (error) {
+      setImportFeedback(error instanceof Error ? error.message : 'Não foi possível ler a planilha.');
+    } finally {
+      setIsImportingSpreadsheet(false);
+    }
+  };
+
+  const handleDownloadSpreadsheetTemplate = () => {
+    const rows = [
+      {
+        Nome: 'CARLOS HENRIQUE CAETANO DA SILVA', CPF: '06744073184', Registro: '07575025319', Categoria: 'AD',
+        'Código do Certificado': '006/CVTE/2026', Início: '08 de junho de 2026', Fim: '16 de junho de 2026',
+        'Carga Horária': '50h/a', 'Data de Emissão': '18 de junho de 2026', Email: 'carlos.caetano@exemplo.com', Telefone: '(61) 98112-4091',
+      },
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    worksheet['!cols'] = [
+      { wch: 38 }, { wch: 14 }, { wch: 15 }, { wch: 12 }, { wch: 24 },
+      { wch: 22 }, { wch: 22 }, { wch: 16 }, { wch: 22 }, { wch: 34 }, { wch: 18 },
+    ];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Alunos');
+    XLSX.writeFile(workbook, 'modelo_importacao_certificados.xlsx');
   };
 
   return (
@@ -430,31 +488,75 @@ LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,007/CVTE/2026,08 de junh
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-lg font-bold flex items-center space-x-2 text-amber-400">
                 <FileSpreadsheet className="w-5 h-5" />
-                <span>Importação em Massa (Mala Direta Instantânea)</span>
+                <span>Gerar certificados por planilha Excel</span>
               </h3>
               <button onClick={() => setIsCsvModalOpen(false)} className="text-slate-400 hover:text-white">✕</button>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              Cole os dados da sua planilha (Excel, Google Sheets, CSV) ou baixe o modelo de exemplo. O sistema cria automaticamente o código do certificado e hash de autenticidade para cada um.
+              Selecione uma planilha preenchida no modelo abaixo. O sistema lê cada linha, cadastra os alunos e prepara os certificados para geração em massa.
             </p>
 
-            <textarea
-              rows={6}
-              value={csvText}
-              onChange={(e) => setCsvText(e.target.value)}
-              placeholder="Nome,CPF,Registro,Categoria,Email,Telefone&#10;MARCOS SILVA,012.345.678-90,09876543210,AD,marcos@email.com,(61) 9999-8888"
-              className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-200 focus:outline-none focus:border-amber-500"
-            />
+            <label className="block rounded-xl border-2 border-dashed border-amber-500/40 bg-slate-950/60 p-5 text-center cursor-pointer hover:border-amber-400 transition-colors">
+              <UploadCloud className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+              <span className="block text-sm font-bold text-white">
+                {spreadsheetFile ? spreadsheetFile.name : 'Selecionar planilha do Excel'}
+              </span>
+              <span className="block text-[11px] text-slate-400 mt-1">Formatos aceitos: .xlsx, .xls e .csv</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="sr-only"
+                onChange={(event) => {
+                  setSpreadsheetFile(event.target.files?.[0] || null);
+                  setImportFeedback('');
+                }}
+              />
+            </label>
+
+            <button
+              type="button"
+              onClick={handleSpreadsheetImport}
+              disabled={!spreadsheetFile || isImportingSpreadsheet}
+              className="w-full px-5 py-3 rounded-xl text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {isImportingSpreadsheet ? 'Lendo planilha...' : 'Importar planilha e gerar certificados'}
+            </button>
+
+            {importFeedback && (
+              <p className="rounded-lg bg-slate-950 border border-slate-700 p-3 text-xs text-slate-200">
+                {importFeedback}
+              </p>
+            )}
+
+            <details className="border-t border-slate-800 pt-3">
+              <summary className="text-xs text-slate-400 cursor-pointer hover:text-white">Ou colar dados em formato CSV</summary>
+
+              <textarea
+                rows={5}
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+                placeholder="Nome,CPF,Registro,Categoria,Código do Certificado,Início,Fim,Carga Horária,Data de Emissão"
+                className="w-full mt-3 p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+              />
+              <button
+                type="button"
+                onClick={handleCsvImport}
+                disabled={!csvText.trim()}
+                className="mt-2 px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white disabled:opacity-40"
+              >
+                Importar texto CSV
+              </button>
+            </details>
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <button
                 type="button"
-                onClick={handleDownloadCsvTemplate}
+                onClick={handleDownloadSpreadsheetTemplate}
                 className="text-xs text-amber-400 hover:underline flex items-center space-x-1"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Baixar Modelo CSV</span>
+                <span>Baixar modelo Excel (.xlsx)</span>
               </button>
 
               <div className="flex space-x-3">
@@ -464,13 +566,6 @@ LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,007/CVTE/2026,08 de junh
                   className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300"
                 >
                   Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCsvImport}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md"
-                >
-                  Processar e Importar Formandos
                 </button>
               </div>
             </div>

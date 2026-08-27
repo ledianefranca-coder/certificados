@@ -105,8 +105,8 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
     setEditingStudent(student);
     setFormState({
       name: student.name,
-      cpf: student.cpf,
-      registrationNumber: student.registrationNumber,
+      cpf: student.cpf.replace(/\D/g, '').slice(0, 11),
+      registrationNumber: student.registrationNumber.replace(/\D/g, '').slice(0, 11),
       category: student.category,
       email: student.email,
       phone: student.phone || '',
@@ -137,6 +137,8 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
       !formState.workload ||
       !formState.issueDate
     ) return;
+
+    if (formState.cpf.length !== 11 || formState.registrationNumber.length !== 11) return;
 
     const grades = [
       { discipline: 'Legislação de Trânsito', workload: '10h/a', grade: formState.grade1, instructor: 'PAULO DE JESUS CAMARGO' },
@@ -200,14 +202,15 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
         
         rows.forEach((row, i) => {
           const name = row['Nome'] || row['nome'] || row['NOME'] || row['Aluno'] || '';
-          const cpf = row['CPF'] || row['cpf'] || '';
-          if (name && cpf) {
+          const cpf = (row['CPF'] || row['cpf'] || '').replace(/\D/g, '').slice(0, 11);
+          const registrationNumber = (row['Registro'] || row['CNH'] || row['registro'] || '').replace(/\D/g, '').slice(0, 11);
+          if (name && cpf.length === 11 && registrationNumber.length === 11) {
             const nextSeq = (students.length + count + 1).toString().padStart(3, '0');
             const newStudent: Student = {
               id: `csv-${Date.now()}-${i}`,
               name: name.trim().toUpperCase(),
               cpf: cpf.trim(),
-              registrationNumber: row['Registro'] || row['CNH'] || row['registro'] || '',
+              registrationNumber,
               category: row['Categoria'] || row['cat'] || 'AD',
               email: row['Email'] || row['email'] || `${name.toLowerCase().replace(/\s+/g, '.')}@email.com`,
               phone: row['Telefone'] || '',
@@ -517,9 +520,14 @@ LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,007/CVTE/2026,08 de junh
                   <input
                     type="text"
                     required
-                    placeholder="000.000.000-00"
+                    inputMode="numeric"
+                    pattern="[0-9]{11}"
+                    maxLength={11}
+                    minLength={11}
+                    title="Digite exatamente 11 números"
+                    placeholder="00000000000"
                     value={formState.cpf}
-                    onChange={(e) => setFormState({ ...formState, cpf: e.target.value })}
+                    onChange={(e) => setFormState({ ...formState, cpf: e.target.value.replace(/\D/g, '').slice(0, 11) })}
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
@@ -529,8 +537,14 @@ LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,007/CVTE/2026,08 de junh
                   <input
                     type="text"
                     required
+                    inputMode="numeric"
+                    pattern="[0-9]{11}"
+                    maxLength={11}
+                    minLength={11}
+                    title="Digite exatamente 11 números"
+                    placeholder="00000000000"
                     value={formState.registrationNumber}
-                    onChange={(e) => setFormState({ ...formState, registrationNumber: e.target.value })}
+                    onChange={(e) => setFormState({ ...formState, registrationNumber: e.target.value.replace(/\D/g, '').slice(0, 11) })}
                     className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-white font-mono focus:outline-none focus:border-amber-500"
                   />
                 </div>
@@ -693,7 +707,7 @@ LEDIANE FRANÇA DOS SANTOS,782.910.451-20,08492019482,D,007/CVTE/2026,08 de junh
                   type="submit"
                   className="px-5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md"
                 >
-                  Salvar Formando
+                  {editingStudent ? 'Salvar alterações' : 'Salvar e gerar certificado'}
                 </button>
               </div>
             </form>

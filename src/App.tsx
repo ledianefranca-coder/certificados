@@ -86,6 +86,17 @@ export default function App() {
   // Handlers
   const handleAddStudent = (newStudent: Student) => {
     setStudents((prev) => [newStudent, ...prev]);
+    setCurrentStudentIndex(0);
+    setActiveTab('generator');
+  };
+
+  const handleNavigate = (tab: string) => {
+    if (tab === 'generator' && students.length === 0) {
+      setActiveTab('students');
+      return;
+    }
+
+    setActiveTab(tab);
   };
 
   const handleUpdateStudent = (updatedStudent: Student) => {
@@ -132,7 +143,7 @@ export default function App() {
       {/* Top Navigation */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleNavigate}
         pendingCount={pendingEmailCount}
         studentsCount={students.length}
         issuedCount={approvedCount}

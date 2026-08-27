@@ -26,11 +26,26 @@ const withFixedInstitutionalData = (template: CourseTemplate): CourseTemplate =>
   legalResolution: DEFAULT_TEMPLATE.legalResolution,
 });
 
+const DEMO_STUDENT_IDS = new Set(INITIAL_STUDENTS.map((student) => student.id));
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('generator');
   const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem('cert_students');
-    return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+
+    if (!saved) return [];
+
+    try {
+      const storedStudents = JSON.parse(saved) as Student[];
+      if (!Array.isArray(storedStudents)) return [];
+
+      // Remove somente os 16 registros demonstrativos incluídos na versão inicial.
+      // Alunos cadastrados posteriormente pelo usuário são preservados.
+      return storedStudents.filter((student) => !DEMO_STUDENT_IDS.has(student.id));
+    } catch {
+      localStorage.removeItem('cert_students');
+      return [];
+    }
   });
 
   const [currentTemplate, setCurrentTemplate] = useState<CourseTemplate>(() => {

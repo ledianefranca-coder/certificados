@@ -239,6 +239,9 @@ export default function App() {
           <div className="text-slate-400">
             Base Administrativa do Quartel-General do Exército &bull; Forte Caxias
           </div>
+          <div className="w-full border-t border-slate-800/70 pt-3 text-center text-slate-500">
+            Desenvolvido por <span className="font-semibold text-slate-300">Lediane França</span>
+          </div>
         </div>
       </footer>
     </div>

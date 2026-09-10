@@ -22,7 +22,6 @@ const withFixedInstitutionalData = (template: CourseTemplate): CourseTemplate =>
   institutionName: DEFAULT_TEMPLATE.institutionName,
   institutionSubtext: DEFAULT_TEMPLATE.institutionSubtext,
   regulationText: DEFAULT_TEMPLATE.regulationText,
-  courseTitle: DEFAULT_TEMPLATE.courseTitle,
   legalResolution: DEFAULT_TEMPLATE.legalResolution,
 });
 

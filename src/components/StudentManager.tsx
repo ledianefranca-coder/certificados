@@ -194,9 +194,21 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
     setIsModalOpen(false);
   };
 
+  const normalizeHeader = (value: unknown) =>
+    String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toLowerCase();
+
   const getCell = (row: Record<string, unknown>, aliases: string[]) => {
+    const normalizedRow = Object.entries(row).reduce<Record<string, unknown>>((result, [key, value]) => {
+      result[normalizeHeader(key)] = value;
+      return result;
+    }, {});
+
     for (const alias of aliases) {
-      const value = row[alias];
+      const value = normalizedRow[normalizeHeader(alias)];
       if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
     }
     return '';
@@ -207,20 +219,19 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
     let invalidCount = 0;
 
     rows.forEach((row, index) => {
-      const name = getCell(row, ['Nome', 'nome', 'NOME', 'Aluno']);
-      const cpf = getCell(row, ['CPF', 'cpf']).replace(/\D/g, '').slice(0, 11);
-      const registrationNumber = getCell(row, ['Registro', 'CNH', 'registro']).replace(/\D/g, '').slice(0, 11);
-      const category = getCell(row, ['Categoria', 'categoria', 'cat']);
-      const certificateCode = getCell(row, ['Código do Certificado', 'Codigo do Certificado', 'Código', 'Codigo']);
-      const periodStart = getCell(row, ['Início', 'Inicio', 'Data Inicial']);
-      const periodEnd = getCell(row, ['Fim', 'Data Final']);
-      const workload = getCell(row, ['Carga Horária', 'Carga Horaria', 'Carga']);
-      const issueDate = getCell(row, ['Data de Emissão', 'Data de Emissao', 'Emissão', 'Emissao']);
+      const name = getCell(row, ['Nome', 'Nome Completo', 'Nome do Aluno', 'Aluno', 'Formando']);
+      const cpf = getCell(row, ['CPF', 'CPF do Aluno', 'CPF Aluno']).replace(/\D/g, '').padStart(11, '0').slice(-11);
+      const registrationNumber = getCell(row, ['Registro', 'Registro CNH', 'Nº Registro CNH', 'Numero Registro CNH', 'CNH', 'Número da CNH']).replace(/\D/g, '').padStart(11, '0').slice(-11);
+      const category = getCell(row, ['Categoria', 'Categoria CNH', 'Cat', 'Cat CNH']) || 'AD';
+      const nextSequence = students.length + importedCount + 1;
+      const certificateCode = getCell(row, ['Código do Certificado', 'Codigo do Certificado', 'Código', 'Codigo', 'Cod Certificado']) ||
+        `${String(nextSequence).padStart(3, '0')}/CVTE/2026`;
+      const periodStart = getCell(row, ['Início', 'Inicio', 'Data Inicial', 'Data de Início', 'Periodo Inicio']) || '08 de junho de 2026';
+      const periodEnd = getCell(row, ['Fim', 'Data Final', 'Data de Término', 'Termino', 'Periodo Fim']) || '16 de junho de 2026';
+      const workload = getCell(row, ['Carga Horária', 'Carga Horaria', 'Carga', 'Carga Horária Total']) || '50h/a';
+      const issueDate = getCell(row, ['Data de Emissão', 'Data de Emissao', 'Emissão', 'Emissao']) || '18 de junho de 2026';
 
-      if (
-        !name || cpf.length !== 11 || registrationNumber.length !== 11 || !category ||
-        !certificateCode || !periodStart || !periodEnd || !workload || !issueDate
-      ) {
+      if (!name || cpf.length !== 11 || registrationNumber.length !== 11) {
         invalidCount++;
         return;
       }
@@ -282,9 +293,27 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
       const workbook = XLSX.read(data, { type: 'array', cellDates: true });
       const firstSheetName = workbook.SheetNames[0];
       if (!firstSheetName) throw new Error('A planilha não possui abas.');
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[firstSheetName], {
+      const worksheet = workbook.Sheets[firstSheetName];
+      const previewRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
+        header: 1,
         defval: '',
         raw: false,
+      });
+      const headerRowIndex = previewRows.findIndex((row) => {
+        const headers = row.map(normalizeHeader);
+        const hasName = headers.some((header) => ['nome', 'nomecompleto', 'nomedoaluno', 'aluno', 'formando'].includes(header));
+        const hasCpf = headers.some((header) => ['cpf', 'cpfdoaluno', 'cpfaluno'].includes(header));
+        return hasName && hasCpf;
+      });
+
+      if (headerRowIndex < 0) {
+        throw new Error('Não encontrei as colunas Nome e CPF. Confira os títulos da planilha ou baixe o modelo.');
+      }
+
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
+        defval: '',
+        raw: false,
+        range: headerRowIndex,
       });
       processSpreadsheetRows(rows);
     } catch (error) {

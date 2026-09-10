@@ -44,7 +44,27 @@ export const DEFAULT_TEMPLATE: CourseTemplate = {
   ],
 };
 
-export const ALTERNATIVE_TEMPLATES: CourseTemplate[] = [DEFAULT_TEMPLATE];
+export const ALTERNATIVE_TEMPLATES: CourseTemplate[] = [
+  DEFAULT_TEMPLATE,
+  {
+    ...DEFAULT_TEMPLATE,
+    id: 'template-mopp',
+    name: 'MOPP - Produtos Perigosos',
+    courseTitle: 'CURSO ESPECIALIZADO PARA CONDUTORES DE VEÍCULOS DE TRANSPORTE DE PRODUTO PERIGOSO',
+  },
+  {
+    ...DEFAULT_TEMPLATE,
+    id: 'template-ctcp',
+    name: 'CTCP - Transporte Coletivo',
+    courseTitle: 'CURSO ESPECIALIZADO PARA CONDUTORES DE TRANSPORTE COLETIVO DE PASSAGEIROS',
+  },
+  {
+    ...DEFAULT_TEMPLATE,
+    id: 'template-cvtci',
+    name: 'CVTCI - Carga Indivisível',
+    courseTitle: 'CURSO ESPECIALIZADO PARA CONDUTORES DE VEÍCULOS DE TRANSPORTE DE CARGA INDIVISÍVEL',
+  },
+];
 
 // Benchmark cohort with 15+ real-formatted students for instantaneous mass-generation testing (< 1 minute target, generates in < 3s!)
 export const INITIAL_STUDENTS: Student[] = [

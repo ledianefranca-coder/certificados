@@ -397,7 +397,7 @@ export async function generateBatchZip(
     const student = students[i];
     const doc = await generateCertificatePdf(student, template);
     const pdfBlob = doc.output('blob');
-    const filename = `Certificado_${student.certificateCode.replace(/\//g, '_')}_${student.name.replace(/\s+/g, '_')}.pdf`;
+    const filename = `${student.name.trim().replace(/[^a-zA-ZÀ-ÿ0-9]+/g, '_').replace(/^_+|_+$/g, '')}.pdf`;
     folder?.file(filename, pdfBlob);
 
     if (onProgress) {

@@ -59,7 +59,7 @@ export const CertificateManager: React.FC<CertificateManagerProps> = ({
     setDownloadingId(student.id);
     try {
       const doc = await generateCertificatePdf(student, template);
-      doc.save(`Certificado_${student.certificateCode.replace(/\//g, '_')}_${student.name.replace(/\s+/g, '_')}.pdf`);
+      doc.save(`${student.name.trim().replace(/[^a-zA-ZÀ-ÿ0-9]+/g, '_').replace(/^_+|_+$/g, '')}.pdf`);
     } catch (e) {
       console.error(e);
     } finally {
